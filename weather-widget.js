@@ -1,6 +1,9 @@
 // @ts-nocheck
-const baseUrl = "http://api.weatherstack.com/current";
-const apiKey = "5d0f859dfa03963db5749d3277398c5d";
+const baseUrl = "https://api.openweathermap.org/data/2.5/weather";
+const apiKey = "dd5f3a82b623c4a7d261ad991ba50c73";
+// const baseUrl = "http://api.weatherstack.com/current";
+// изначально делал через эту апиху, но она не позволяет испольховать шифрование через HTTPS протокол
+// поэтому использую апи из примера и украл чужой apikey, не хочу светить данные банковской карты
 
 class WeatherWidget extends HTMLElement {
 	constructor() {
@@ -21,7 +24,7 @@ class WeatherWidget extends HTMLElement {
 
 				fetch(
 					baseUrl +
-						`?access_key=${apiKey}&query=${latitude}, ${longitude}`
+						`?appid=${apiKey}&lat=${latitude}&lon=${longitude}&lang=ru&units=metric`
 				)
 					.then((response) => response.json())
 					.then((data) => this.dataUpdate(data))
@@ -35,15 +38,29 @@ class WeatherWidget extends HTMLElement {
 	dataUpdate(data) {
 		console.log(data);
 		this.shadowRoot.querySelector(".weather-widget__location").textContent =
-			data.location.region + " " + data.location.name;
-		this.shadowRoot.querySelector(".weather-widget__temp").textContent =
-			data.current.temperature + "°С";
-		this.shadowRoot.querySelector(".weather-widget__wind").textContent =
-			data.current.wind_speed + "м/c";
-		this.shadowRoot.querySelector(".weather-widget__wind_dir").textContent =
-			"Направление ветра: " + data.current.wind_dir;
-		this.shadowRoot.querySelector(".weather-widget__img").src =
-			data.current.weather_icons[0];
+			data.name;
+
+		this.shadowRoot.querySelector(
+			".weather-widget__list-temp"
+		).textContent = `${data.main.temp} °С`;
+
+		this.shadowRoot.querySelector(
+			".weather-widget__list-temp_feels-likes"
+		).textContent = `Осушается как ${data.main.feels_like} °С`;
+
+		this.shadowRoot.querySelector(
+			".weather-widget__list-wind"
+		).textContent = `Cкорость ветра: ${data.wind.speed} м/c;`;
+
+		this.shadowRoot.querySelector(
+			".weather-widget__list-description"
+		).textContent = `Описание: ${data.weather[0].description}`;
+
+		this.shadowRoot.querySelector(
+			".weather-widget__img"
+		).src = `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
+		this.shadowRoot.querySelector(".weather-widget__img").alt =
+			data.weather[0].icon;
 	}
 
 	render() {
@@ -65,26 +82,39 @@ class WeatherWidget extends HTMLElement {
             .widget__header {
 				font-size: 1rem;
             }
+			
+			.weather-widget__info {
+				display: flex;
+			}
 
 			.weather-widget__img {
 				border-radius: 50%;
-				position: absolute;
 				width: 45px;
-				height: 45px;
-				right: 1rem;
-				bottom: 1rem;
+			}
+			
+			.weather-widget__list {
+				padding: 0;
+				list-style-type: none; 
+			}
+			.weather-widget__location, .weather-widget__list-temp {
+				font-weight: 700;
 			}
         </style>
 
         <div class="weather-widget">
             <h1 class="weather-widget__header">Погода на сегодня</h1>
-            <p class="weather-widget__location">Загрузка...</p>
-            <span class="weather-widget__temp">--°С</span>
-            <span class="weather-widget__wind">--м/с</span>
-			<div>
-            	<span class="weather-widget__wind_dir">Направление ветра: --</span>
-				<img class="weather-widget__img" src="" alt="" />
+			<div class="weather-widget__info">
+				<p class="weather-widget__location">
+					<strong>Загрузка...</strong>
+				</p>
+				<img class="weather-widget__img" src="" atl=""/>
 			</div>
+			<ul class="weather-widget__list">
+				<li class="weather-widget__list-temp">--°С</li>
+				<li class="weather-widget__list-temp_feels-likes">Осушается как --°С</li>
+				<li class="weather-widget__list-wind">Cкорость ветра: --м/с</li>
+				<li class="weather-widget__list-description">Описание: --</li>
+			</ul>
         </div>
         `;
 	}
